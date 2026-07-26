@@ -1,7 +1,9 @@
 import streamlit as st
 
 from rag import (
-    load_vector_db,
+    load_document,
+    chunk_document,
+    build_vector_db,
     search_chunks,
     generate_answer,
 )
@@ -105,6 +107,7 @@ def load_rag():
     text = load_document()
     chunks = chunk_document(text)
     return build_vector_db(chunks)
+collection = load_rag()
 
 # ---------------------------------------
 # Header
