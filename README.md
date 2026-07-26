@@ -1,6 +1,6 @@
 # 🏥 Health Transformation Knowledge Assistant
 
-An end-to-end Retrieval-Augmented Generation (RAG) application that answers questions about **India's Health Transformation** using semantic search over the official Press Information Bureau (PIB) document.
+>An end-to-end Retrieval-Augmented Generation (RAG) application that answers questions about **India's Health Transformation** using semantic search over the official Press Information Bureau (PIB) document.
 
 ---
 
@@ -137,7 +137,7 @@ health-rag-assistant/
 Clone the repository
 
 ```bash
-git clone https://github.com/<username>/health-rag-assistant.git
+git clone https://github.com/vaibhavitej-a11y/health-rag-assistant.git
 ```
 
 Install dependencies
