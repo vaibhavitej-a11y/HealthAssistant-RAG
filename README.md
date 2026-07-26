@@ -1,95 +1,128 @@
 # 🏥 Health Transformation Knowledge Assistant
 
-> An end-to-end Retrieval-Augmented Generation (RAG) application that answers questions about **India's Health Transformation** using semantic search over the official Press Information Bureau (PIB) document.
+An end-to-end Retrieval-Augmented Generation (RAG) application that answers questions about **India's Health Transformation** using semantic search over the official Press Information Bureau (PIB) document.
 
 ---
 
-## 📌 Project Overview
+# Project Overview
 
-This project implements a complete **Retrieval-Augmented Generation (RAG)** pipeline that enables users to ask natural language questions about India's Health Transformation initiatives.
+This project implements a Retrieval-Augmented Generation (RAG) pipeline that enables users to ask natural language questions about India's Health Transformation initiatives.
 
-Instead of relying solely on an LLM's internal knowledge, the system first retrieves the most relevant information from the provided PIB document using **semantic vector search**, then generates an answer grounded entirely in the retrieved context.
-
-The result is a more reliable, explainable, and document-aware question answering system.
+Instead of relying solely on the language model's internal knowledge, the system retrieves the most relevant information from the provided PIB document using semantic vector search and supplies that context to the LLM before generating an answer. This ensures responses remain grounded in the source document.
 
 ---
 
-## ✨ Features
+# Features
 
-- 📄 Automated document ingestion from the official PIB webpage
-- ✂️ Intelligent document chunking for efficient retrieval
-- 🧠 Semantic embeddings using SentenceTransformers
-- 🗂️ Vector storage with ChromaDB
-- 🔎 Semantic similarity search
-- 🤖 Grounded answer generation using Google Gemini 2.5 Flash
-- 🌐 Interactive Streamlit web interface
-- 📚 Supporting evidence displayed alongside every answer
+- Automated ingestion of the official PIB webpage
+- Semantic section-based document chunking
+- SentenceTransformer embeddings (`all-MiniLM-L6-v2`)
+- ChromaDB vector database with cosine similarity search
+- Google Gemini 2.5 Flash for grounded answer generation
+- Interactive Streamlit interface
+- Supporting evidence displayed for every response
 
 ---
 
-## 🏗️ System Architecture
+# System Architecture
 
 ```text
-                  PIB Webpage
-                       │
-                       ▼
-             HTML Extraction (BeautifulSoup)
-                       │
-                       ▼
-              Document Chunking (~350 words)
-                       │
-                       ▼
-      SentenceTransformer Embeddings
-                       │
-                       ▼
-             ChromaDB Vector Database
-                       │
-         ┌─────────────┴─────────────┐
-         │                           │
-         ▼                           ▼
- User Question                Query Embedding
-         │                           │
-         └─────────────┬─────────────┘
-                       ▼
-             Semantic Similarity Search
-                       │
-               Top Relevant Chunks
-                       │
-                       ▼
-             Gemini 2.5 Flash (RAG)
-                       │
-                       ▼
-              Grounded Final Answer
+PIB Webpage
+      │
+      ▼
+HTML Extraction (BeautifulSoup)
+      │
+      ▼
+Semantic Section Chunking
+      │
+      ▼
+SentenceTransformer Embeddings
+      │
+      ▼
+ChromaDB (Cosine Similarity)
+      │
+      ▼
+Top Relevant Sections
+      │
+      ▼
+Gemini 2.5 Flash
+      │
+      ▼
+Grounded Answer + Supporting Evidence
 ```
 
 ---
 
-# ⚙️ Tech Stack
+# How the Document is Ingested and Chunked
 
-| Component | Technology |
-|-----------|------------|
-| Language | Python |
-| UI | Streamlit |
-| Web Scraping | BeautifulSoup + Requests |
-| Embedding Model | all-MiniLM-L6-v2 (SentenceTransformers) |
-| Vector Database | ChromaDB |
-| LLM | Google Gemini 2.5 Flash |
-| Environment | python-dotenv |
+The source document is downloaded directly from the official Press Information Bureau website using `requests`.
+
+BeautifulSoup extracts the main article content while removing HTML elements such as scripts and styles.
+
+Instead of splitting the document into fixed-size chunks, the application identifies logical section headings and groups related paragraphs together. Large sections are split only when necessary while preserving their section title as metadata.
+
+This semantic chunking strategy maintains context and improves retrieval quality compared to arbitrary fixed-length chunks.
 
 ---
 
-# 📂 Project Structure
+# Embeddings and Vector Storage
+
+Each semantic chunk is converted into a dense vector embedding using the SentenceTransformers model:
+
+```
+all-MiniLM-L6-v2
+```
+
+The generated embeddings are stored in a persistent ChromaDB collection using cosine similarity.
+
+Each stored record contains:
+
+- Chunk text
+- Section title
+- Display title (used in the UI)
+- Embedding vector
+
+The vector database is created once and reused for future searches.
+
+---
+
+# How Semantic Search + RAG Works
+
+When a user submits a question:
+
+1. The question is converted into an embedding.
+2. ChromaDB performs cosine similarity search.
+3. The most relevant document sections are retrieved.
+4. Retrieved sections are combined with the user question.
+5. Gemini 2.5 Flash generates an answer using only the retrieved context.
+6. The application displays both the generated answer and the supporting sections used for retrieval.
+
+---
+
+# Tech Stack
+
+| Component | Technology |
+|------------|------------|
+| Language | Python |
+| UI | Streamlit |
+| Web Scraping | Requests + BeautifulSoup |
+| Embeddings | SentenceTransformers |
+| Vector Database | ChromaDB |
+| LLM | Google Gemini 2.5 Flash |
+
+---
+
+# Project Structure
 
 ```text
 health-rag-assistant/
 │
-├── app.py                 # Streamlit Interface
-├── rag.py                 # RAG Pipeline
-├── ingest.py              # PIB Document Extraction
-├── implementation.md      # Design Decisions
+├── app.py
+├── rag.py
+├── ingest.py
+├── implementation.md
 ├── requirements.txt
 ├── README.md
-├── .gitignore
 │
 ├── data/
 │   └── document.txt
@@ -99,80 +132,12 @@ health-rag-assistant/
 
 ---
 
-# 🚀 How It Works
-
-## Step 1 — Document Ingestion
-
-The official **India's Health Transformation** PIB webpage is downloaded and converted into plain text using **BeautifulSoup**.
-
----
-
-## Step 2 — Document Chunking
-
-The extracted document is split into approximately **350-word chunks**.
-
-Each chunk represents a meaningful section of the document while preserving enough context for semantic retrieval.
-
----
-
-## Step 3 — Embedding Generation
-
-Each chunk is converted into a dense semantic vector using:
-
-> **SentenceTransformer**
->
-> `all-MiniLM-L6-v2`
-
-These embeddings capture semantic meaning rather than exact keyword matches.
-
----
-
-## Step 4 — Vector Storage
-
-The generated embeddings are stored inside **ChromaDB**.
-
-This enables efficient nearest-neighbor similarity search for user queries.
-
----
-
-## Step 5 — Semantic Retrieval
-
-When a user asks a question:
-
-1. The query is embedded.
-2. ChromaDB searches for the most semantically similar chunks.
-3. The top retrieved chunks become contextual knowledge.
-
----
-
-## Step 6 — Retrieval-Augmented Generation
-
-The retrieved context and the user's question are combined into a prompt and sent to **Gemini 2.5 Flash**.
-
-The model is explicitly instructed to:
-
-- Answer only from the retrieved context.
-- Avoid hallucinating information.
-- Return concise, grounded responses.
-
----
-
-# 🖥️ User Interface
-
-The project includes a lightweight **Streamlit** interface where users can:
-
-- Ask questions in natural language
-- View AI-generated answers
-- Inspect supporting evidence retrieved from the knowledge base
-
----
-
-# 📦 Installation
+# Installation
 
 Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/health-rag-assistant.git
+git clone https://github.com/<username>/health-rag-assistant.git
 ```
 
 Install dependencies
@@ -189,21 +154,21 @@ GEMINI_API_KEY=YOUR_API_KEY
 
 ---
 
-# ▶️ Running the Project
+# Running the Project
 
-### 1. Extract the document
+Extract the source document
 
 ```bash
 python ingest.py
 ```
 
-### 2. Build the vector database
+Build the vector database
 
 ```bash
 python rag.py
 ```
 
-### 3. Launch the application
+Launch the application
 
 ```bash
 streamlit run app.py
@@ -211,82 +176,35 @@ streamlit run app.py
 
 ---
 
-# 📖 Example Questions
+# Example Questions
 
 - What is PM-JAY?
-- What are Ayushman Arogya Mandirs?
 - What is ABDM?
-- What initiatives were launched under NHM?
-- How has India's healthcare infrastructure improved?
+- What are Ayushman Arogya Mandirs?
+- What is Tele-MANAS?
+- How has healthcare infrastructure improved?
 
 ---
 
-# 💡 Design Decisions
+# Screenshot
 
-### Why SentenceTransformers?
-
-- Fast
-- Lightweight
-- Excellent semantic retrieval performance
-- No embedding API costs
+![alt text](image.png)
 
 ---
 
-### Why ChromaDB?
+# Future Improvements
 
-- Easy local vector database
-- Persistent storage
-- Fast similarity search
-- Perfect for small-to-medium RAG applications
-
----
-
-### Why Gemini 2.5 Flash?
-
-- Fast response generation
-- Strong reasoning capability
-- Excellent instruction following
-- Cost-effective for RAG workflows
-
----
-
-# 🔮 Future Improvements
-
-- Multi-document knowledge base
-- PDF upload support
-- Semantic chunking
-- Metadata filtering
-- Source citation highlighting
-- Retrieval score visualization
+- Hybrid keyword + semantic retrieval
+- Retrieval reranking
+- Multi-document support
+- PDF upload capability
+- Highlight retrieved text spans
 - Conversational memory
 
 ---
 
-# 📚 Source Document
+# Source Document
 
-**Press Information Bureau**
+Official Press Information Bureau
 
-**India's Health Transformation**
-
-https://www.pib.gov.in/PressReleasePage.aspx?PRID=2269699&reg=48&lang=2
-
----
-
-# 👩‍💻 Author
-
-**E. Vaibhavi Tej**
-
-AI & ML Undergraduate
-
-Python • Generative AI • RAG • AI Agents • Cloud
-
----
-
-## ⭐ Highlights
-
-- End-to-end RAG implementation
-- Semantic search over vector embeddings
-- Grounded LLM responses
-- Clean and modular architecture
-- Interactive web interface
-- Production-style project organization
+https://www.pib.gov.in/PressReleasePage.aspx?PRID=2269699&reg=48&lang=2 

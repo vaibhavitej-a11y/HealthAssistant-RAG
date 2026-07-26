@@ -146,6 +146,7 @@ if st.button("🔍 Generate Answer"):
         results = search_chunks(collection, question)
 
         retrieved_docs = results["documents"][0]
+        retrieved_metadata = results["metadatas"][0]
 
         answer = generate_answer(question, retrieved_docs)
 
@@ -170,8 +171,11 @@ if st.button("🔍 Generate Answer"):
         unsafe_allow_html=True
     )
 
-    for i, doc in enumerate(retrieved_docs, start=1):
+    for meta, doc in zip(retrieved_metadata, retrieved_docs):
 
-        with st.expander(f"Evidence {i}"):
+        clean_doc = doc.split("\n\n", 1)[1] if "\n\n" in doc else doc
 
-            st.write(doc)
+        with st.expander(f"📄 {meta['display_title']}"):
+            st.write(clean_doc)
+
+    

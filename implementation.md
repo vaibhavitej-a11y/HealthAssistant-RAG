@@ -2,100 +2,112 @@
 
 ## Project Overview
 
-This project implements a Retrieval-Augmented Generation (RAG) system for answering questions about India's Health Transformation initiatives using a Press Information Bureau (PIB) document.
+This project implements a Retrieval-Augmented Generation (RAG) system that answers questions about **India's Health Transformation** using the official Press Information Bureau (PIB) article.
 
-Instead of relying only on the language model's knowledge, the application retrieves relevant information from the provided document before generating an answer.
-
----
-
-## Workflow
-
-1. Download the PIB webpage.
-2. Extract the webpage text using BeautifulSoup.
-3. Split the document into fixed-size chunks (350 words).
-4. Generate embeddings using SentenceTransformers (`all-MiniLM-L6-v2`).
-5. Store embeddings in ChromaDB.
-6. Perform semantic search for the user's question.
-7. Retrieve the top relevant chunks.
-8. Generate a grounded answer using Gemini 2.5 Flash.
+Rather than relying only on the language model's built-in knowledge, the application retrieves the most relevant information from the source document and uses it as context to generate grounded, document-based responses.
 
 ---
 
-## Technologies Used
+# System Workflow
 
-- Python
-- Streamlit
-- ChromaDB
-- SentenceTransformers
-- Google Gemini 2.5 Flash
-- BeautifulSoup
-- Requests
-
----
-
-## Chunking Strategy
-
-The document is divided into fixed-size chunks of approximately 350 words. This approach provides sufficient context while maintaining efficient semantic retrieval.
+1. Download the PIB webpage using `requests`.
+2. Extract the main article content using BeautifulSoup.
+3. Divide the document into semantic sections based on headings and paragraphs.
+4. Generate embeddings for each section using SentenceTransformers.
+5. Store the embeddings and metadata in ChromaDB.
+6. Convert the user's question into an embedding.
+7. Retrieve the most relevant sections using cosine similarity search.
+8. Provide the retrieved context to Gemini 2.5 Flash.
+9. Display the generated answer along with the supporting evidence.
 
 ---
 
-## Embedding Model
+# Embedding Model Choice
 
-The project uses the `all-MiniLM-L6-v2` SentenceTransformer model to generate dense vector embeddings for each document chunk and user query.
+The project uses **SentenceTransformers (`all-MiniLM-L6-v2`)**.
 
----
+### Why this model?
 
-## Vector Database
+- Produces high-quality semantic embeddings.
+- Lightweight and fast to run locally.
+- Well-suited for small and medium-sized RAG applications.
+- Open-source and does not require an embedding API.
 
-ChromaDB is used as the vector database to store embeddings and perform similarity search.
-
----
-
-## Retrieval Process
-
-For every user question:
-
-- Generate the query embedding.
-- Search ChromaDB.
-- Retrieve the top three most relevant chunks.
-
-These retrieved chunks are provided as context to the language model.
+The same model is used to embed both the document sections and user queries, allowing them to be compared in the same vector space.
 
 ---
 
-## Answer Generation
+# Embedding Storage and Index
 
-Google Gemini 2.5 Flash receives:
+Embeddings are stored using **ChromaDB**, a lightweight vector database.
 
-- User question
-- Retrieved context
+Each stored record contains:
 
-The model is instructed to answer only from the retrieved document. If sufficient information is unavailable, it responds accordingly instead of generating unsupported information.
+- Section text
+- Section title
+- Display title (used in the Streamlit interface)
+- Embedding vector
 
----
+The collection is configured to use **cosine similarity**, which measures semantic closeness between the query and document embeddings.
 
-## User Interface
-
-A simple Streamlit interface allows users to:
-
-- Enter questions
-- View AI-generated answers
-- Inspect the retrieved supporting evidence
+ChromaDB provides persistent storage, allowing the embeddings to be generated once and reused across application runs.
 
 ---
 
-## Limitations
+# LLM and Prompt Design
 
-- Supports a single source document.
-- Uses fixed-size chunking.
+Google **Gemini 2.5 Flash** is used as the language model.
+
+For each query, the application constructs a prompt containing:
+
+- The retrieved document sections
+- The user's question
+- Instructions to answer only using the provided context
+
+The prompt also instructs the model to avoid making unsupported claims. If the answer cannot be found in the retrieved context, the model is expected to state that the information is unavailable.
+
+This prompt design helps reduce hallucinations and keeps responses grounded in the source document.
+
+---
+
+# What I Learned During This Assignment
+
+While completing this project, I explored several concepts that were new to me:
+
+- Building a complete Retrieval-Augmented Generation (RAG) pipeline.
+- Generating semantic embeddings using SentenceTransformers.
+- Storing and querying embeddings with ChromaDB.
+- Designing prompts that encourage grounded responses.
+- Improving retrieval quality through semantic section-based chunking instead of fixed-size chunks.
+- Using metadata to improve both retrieval and user interface presentation.
+
+---
+
+# Limitations
+
+Current limitations include:
+
+- Supports only a single source document.
+- Retrieval quality depends on the embedding model.
+- Does not rerank retrieved results.
 - No conversational memory between questions.
+- Does not highlight the exact text used to generate the answer.
 
 ---
 
-## Future Improvements
+# Improvements With Two More Days
+
+Given additional development time, I would:
 
 - Support multiple documents.
-- Add PDF upload functionality.
-- Implement metadata filtering.
-- Improve chunking with semantic segmentation.
-- Display similarity scores for retrieved chunks.
+- Implement hybrid keyword + semantic retrieval.
+- Add a reranking stage to improve retrieval accuracy.
+- Highlight the exact passages used to generate each answer.
+- Support PDF uploads.
+- Add conversational memory for follow-up questions.
+
+---
+
+# Conclusion
+
+This project demonstrates an end-to-end RAG workflow, including document ingestion, semantic chunking, embedding generation, vector search, and grounded answer generation through an interactive Streamlit application.

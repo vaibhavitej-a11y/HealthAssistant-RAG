@@ -1,25 +1,44 @@
+import os
 import requests
 from bs4 import BeautifulSoup
-import os
 
 URL = "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2269699&reg=48&lang=2"
 
 print("Downloading PIB article...")
 
 response = requests.get(URL)
-
-if response.status_code != 200:
-    raise Exception(f"Failed to fetch page. Status code: {response.status_code}")
+response.raise_for_status()
 
 soup = BeautifulSoup(response.text, "html.parser")
 
-# Extract all visible text
-text = soup.get_text(separator="\n", strip=True)
+# Find the main article container
+article = soup.find(
+    "div",
+    class_="innner-page-main-about-us-content-right-part"
+)
 
-# Create data folder if it doesn't exist
+if article is None:
+    raise Exception("Could not locate article content.")
+
+# Remove images, scripts, styles and hidden inputs
+for tag in article.find_all(["img", "script", "style", "input"]):
+    tag.decompose()
+
+lines = []
+
+# Preserve headings and paragraphs
+for tag in article.find_all(["h2", "h3", "p", "li"]):
+
+    text = tag.get_text(" ", strip=True)
+
+    if not text:
+        continue
+
+    lines.append(text)
+
 os.makedirs("data", exist_ok=True)
 
 with open("data/document.txt", "w", encoding="utf-8") as f:
-    f.write(text)
+    f.write("\n\n".join(lines))
 
-print("✅ Document saved to data/document.txt")
+print("✅ Clean document saved.")
