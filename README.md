@@ -175,6 +175,9 @@ streamlit run app.py
 ```
 
 ---
+# Live Demo
+
+https://healthassistant-rag-vwtevho9nqcyycilhmtyz5.streamlit.app/
 
 # Example Questions
 
