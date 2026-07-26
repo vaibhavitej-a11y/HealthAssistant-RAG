@@ -12,6 +12,7 @@ venv/
 # OS files
 .DS_Store
 Thumbs.db
+chroma_db/
 
 # IDE settings
 .vscode/
