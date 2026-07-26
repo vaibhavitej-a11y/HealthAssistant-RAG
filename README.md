@@ -27,28 +27,28 @@ Instead of relying solely on the language model's internal knowledge, the system
 # System Architecture
 
 ```text
-PIB Webpage
-      │
-      ▼
-HTML Extraction (BeautifulSoup)
-      │
-      ▼
-Semantic Section Chunking
-      │
-      ▼
-SentenceTransformer Embeddings
-      │
-      ▼
-ChromaDB (Cosine Similarity)
-      │
-      ▼
-Top Relevant Sections
-      │
-      ▼
+PIB Article
+     │
+     ▼
+Clean & Chunk
+     │
+     ▼
+Embeddings
+     │
+     ▼
+ChromaDB
+     ▲
+     │
+User Query
+     │
+     ▼
+Semantic Search
+     │
+     ▼
 Gemini 2.5 Flash
-      │
-      ▼
-Grounded Answer + Supporting Evidence
+     │
+     ▼
+Answer + Evidence
 ```
 
 ---
