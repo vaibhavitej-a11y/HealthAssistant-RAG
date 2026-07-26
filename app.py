@@ -102,9 +102,9 @@ label{
 
 @st.cache_resource
 def load_rag():
-    return load_vector_db()
-
-collection = load_rag()
+    text = load_document()
+    chunks = chunk_document(text)
+    return build_vector_db(chunks)
 
 # ---------------------------------------
 # Header
